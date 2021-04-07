@@ -121,7 +121,7 @@ X_test = preprocessor(X_test)
 model.fit(
     X_train,
     y_train,
-    epoch=25,
+    epochs=25,
     verbose=1,
     validation_data=(X_test, y_test)
 )
