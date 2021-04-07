@@ -26,7 +26,7 @@ train_flooded_imgs=[]
 train_flooded_img_dir = train_dir+"/Labeled/Flooded/image"
 imgs = os.listdir(train_flooded_img_dir)
 imgs.sort()
-imgs = imgs[5:8]             # To be removed, truncating the number of images loaded for tesing purposes
+# imgs = imgs[5:8]             # To be removed, truncating the number of images loaded for tesing purposes
 
 # for loading all training images in a numpy array
 for img_path in imgs:
@@ -53,7 +53,7 @@ train_flooded_masks = []
 train_flooded_mask_dir = train_dir+"/Labeled/Flooded/mask"
 masks = os.listdir(train_flooded_mask_dir)
 masks.sort()
-masks = masks[5:8]           # To be removed, truncating the number of masks loaded for tesing purposes
+# masks = masks[5:8]           # To be removed, truncating the number of masks loaded for tesing purposes
 
 # for loading all training masks in a numpy array
 for mask_path in masks:
