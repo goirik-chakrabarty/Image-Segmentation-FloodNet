@@ -7,20 +7,20 @@ import cv2
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from keras.utils import to_categorical
-from keras.optimizers import Adam
-
-import PSPnet
 # %%
 seed = 42
 np.random.seed = seed
-model_name = 'PSPNet_25img_25epoch_768'
+num_imgs = 12
+epochs = 25
+train_grid_size = 384       # 384 or 768
+model_name = 'PSPNet_'+str(num_imgs)+'img_'+str(epochs)+'epoch_'+str(train_grid_size)         
 
 # %%
 wd = os.getcwd()                # working directory
 train_dir = wd+"/data/Train"    # training directory
 n_classes=10                    # number of classes
-height = int(768/2)
-width = int(768/2)
+height = train_grid_size
+width = train_grid_size
 img_height = 3000
 img_width = 4000
 
@@ -32,7 +32,7 @@ train_flooded_imgs=[]
 train_flooded_img_dir = train_dir+"/Labeled/Flooded/image"
 imgs = os.listdir(train_flooded_img_dir)
 imgs.sort()
-imgs = imgs[:25]             # To be removed, truncating the number of images loaded for tesing purposes
+imgs = imgs[:num_imgs]             # To be removed, truncating the number of images loaded for tesing purposes
 
 # for loading all training images in a numpy array
 for img_path in imgs:
@@ -59,7 +59,7 @@ train_flooded_masks = []
 train_flooded_mask_dir = train_dir+"/Labeled/Flooded/mask"
 masks = os.listdir(train_flooded_mask_dir)
 masks.sort()
-masks = masks[:25]           # To be removed, truncating the number of masks loaded for tesing purposes
+masks = masks[:num_imgs]           # To be removed, truncating the number of masks loaded for tesing purposes
 
 # for loading all training masks in a numpy array
 for mask_path in masks:
@@ -111,6 +111,13 @@ train_flooded_masks_cat = flood_masks_cat.reshape((train_flooded_masks.shape[0],
 X_train, X_test, y_train, y_test = train_test_split(train_flooded_imgs, train_flooded_masks_cat, test_size=0.2, random_state=42)
 
 # %%
+#########################################################
+################ TRAINING BEGINS HERE ###################
+#########################################################
+
+from keras.optimizers import Adam
+import PSPnet
+# %%
 # Calling model from PSPNet.py
 optim = Adam()
 model = PSPnet.get_model(height,width,optim)
@@ -126,7 +133,7 @@ X_test = preprocessor(X_test)
 history = model.fit(
                 X_train,
                 y_train,
-                epochs=25,
+                epochs=epochs,
                 verbose=1,
                 validation_data=(X_test, y_test)
             )
@@ -170,9 +177,9 @@ plt.show()
 # fig2.savefig('img/graphs/'+model_name+'_IOU.jpg')
 
 # %%
-#############################################
-######## TESTING MODEL BEGINS HERE ##########
-#############################################
+#######################################################
+############## TESTING MODEL BEGINS HERE ##############
+#######################################################
 # Note: X_test, y_test needed in memory. So run the inittial blocks this loading of model. 
 
 from keras.models import load_model
@@ -187,3 +194,4 @@ n_classes = 10
 IOU_keras = MeanIoU(num_classes=n_classes)  
 IOU_keras.update_state(y_test[:,:,:,0], y_pred_argmax)
 print("Mean IoU =", IOU_keras.result().numpy())
+# %%
