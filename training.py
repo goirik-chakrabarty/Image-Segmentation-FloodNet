@@ -1,6 +1,7 @@
 # %%
 import os
 import numpy as np
+import matplotlib.pyplot as plt 
 import cv2
 
 from sklearn.preprocessing import LabelEncoder
@@ -13,8 +14,8 @@ import PSPnet
 wd = os.getcwd()                # working directory
 train_dir = wd+"/data/Train"    # training directory
 n_classes=10                    # number of classes
-height = 768
-width = 768
+height = int(768/2)
+width = int(768/2)
 img_height = 3000
 img_width = 4000
 
@@ -26,7 +27,7 @@ train_flooded_imgs=[]
 train_flooded_img_dir = train_dir+"/Labeled/Flooded/image"
 imgs = os.listdir(train_flooded_img_dir)
 imgs.sort()
-# imgs = imgs[5:8]             # To be removed, truncating the number of images loaded for tesing purposes
+imgs = imgs[2:12]             # To be removed, truncating the number of images loaded for tesing purposes
 
 # for loading all training images in a numpy array
 for img_path in imgs:
@@ -53,7 +54,7 @@ train_flooded_masks = []
 train_flooded_mask_dir = train_dir+"/Labeled/Flooded/mask"
 masks = os.listdir(train_flooded_mask_dir)
 masks.sort()
-# masks = masks[5:8]           # To be removed, truncating the number of masks loaded for tesing purposes
+masks = masks[2:12]           # To be removed, truncating the number of masks loaded for tesing purposes
 
 # for loading all training masks in a numpy array
 for mask_path in masks:
@@ -118,10 +119,46 @@ X_test = preprocessor(X_test)
 
 # %%
 # Training the model
-model.fit(
-    X_train,
-    y_train,
-    epochs=25,
-    verbose=1,
-    validation_data=(X_test, y_test)
-)
+history = model.fit(
+                X_train,
+                y_train,
+                epochs=25,
+                verbose=1,
+                validation_data=(X_test, y_test)
+            )
+# %%
+model.save('saved_models/PSPnet_25epochs.hdf5')
+
+# %%
+
+#Plotting the training and validation accuracy and loss at each epoch
+loss = history.history['loss']
+val_loss = history.history['val_loss']
+epochs = range(1, len(loss) + 1)
+plt.plot(epochs, loss, 'b', label='Training loss')
+plt.plot(epochs, val_loss, 'r', label='Validation loss')
+plt.title('Training and validation loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.show()
+plt.savefig('PSPNet_12img_25epoch_loss.png')
+# %%
+acc = history.history['iou_score']
+val_acc = history.history['val_iou_score']
+
+# %%
+plt.plot(epochs, acc, 'b', label='Training IOU')
+plt.plot(epochs, val_acc, 'r', label='Validation IOU')
+plt.title('Training and validation IOU')
+plt.xlabel('Epochs')
+plt.ylabel('IOU')
+plt.legend()
+plt.show()
+plt.savefig('PSPNet_12img_25epoch_IOU.png')
+# %%
+import pickle
+# %%
+with open('history.pkl', 'wb') as file:
+    pickle.dump(history,file)
+# %%
