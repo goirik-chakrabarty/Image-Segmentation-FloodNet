@@ -11,11 +11,15 @@ from keras.optimizers import Adam
 
 import PSPnet
 # %%
+seed = 42
+np.random.seed = seed
+
+# %%
 wd = os.getcwd()                # working directory
 train_dir = wd+"/data/Train"    # training directory
 n_classes=10                    # number of classes
-height = int(768/2)
-width = int(768/2)
+height = int(768)
+width = int(768)
 img_height = 3000
 img_width = 4000
 
@@ -27,7 +31,7 @@ train_flooded_imgs=[]
 train_flooded_img_dir = train_dir+"/Labeled/Flooded/image"
 imgs = os.listdir(train_flooded_img_dir)
 imgs.sort()
-imgs = imgs[2:12]             # To be removed, truncating the number of images loaded for tesing purposes
+imgs = imgs[:25]             # To be removed, truncating the number of images loaded for tesing purposes
 
 # for loading all training images in a numpy array
 for img_path in imgs:
@@ -54,7 +58,7 @@ train_flooded_masks = []
 train_flooded_mask_dir = train_dir+"/Labeled/Flooded/mask"
 masks = os.listdir(train_flooded_mask_dir)
 masks.sort()
-masks = masks[2:12]           # To be removed, truncating the number of masks loaded for tesing purposes
+masks = masks[:25]           # To be removed, truncating the number of masks loaded for tesing purposes
 
 # for loading all training masks in a numpy array
 for mask_path in masks:
@@ -127,7 +131,7 @@ history = model.fit(
                 validation_data=(X_test, y_test)
             )
 # %%
-model.save('saved_models/PSPnet_25epochs.hdf5')
+model.save('saved_models/PSPnet_25img_25epoch.hdf5')
 
 # %%
 
@@ -141,8 +145,12 @@ plt.title('Training and validation loss')
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
 plt.legend()
+# plt.savefig('PSPNet_12img_25epoch_loss.png')
+# plt.show()
+fig1 = plt.gcf()
 plt.show()
-plt.savefig('PSPNet_12img_25epoch_loss.png')
+plt.draw()
+fig1.savefig('/img/graphs/PSPNet_12img_25epoch_IOU.png')
 # %%
 acc = history.history['iou_score']
 val_acc = history.history['val_iou_score']
@@ -154,11 +162,28 @@ plt.title('Training and validation IOU')
 plt.xlabel('Epochs')
 plt.ylabel('IOU')
 plt.legend()
+# plt.savefig('/img/graphs/PSPNet_12img_25epoch_IOU.png')
+# plt.show()
+fig2 = plt.gcf()
 plt.show()
-plt.savefig('PSPNet_12img_25epoch_IOU.png')
+plt.draw()
+fig2.savefig('/img/graphs/PSPNet_12img_25epoch_IOU.png')
+
 # %%
-import pickle
+#############################################
+######## TESTING MODEL BEGINS HERE ##########
+#############################################
+# Note: X_test, y_test needed in memory. So run the inittial blocks this loading of model. 
+
+from keras.models import load_model
+from keras.metrics import MeanIoU
 # %%
-with open('history.pkl', 'wb') as file:
-    pickle.dump(history,file)
+PSPNet = load_model('saved_models/PSPnet_25epochs.hdf5', compile=False)
 # %%
+y_pred=PSPNet.predict(X_test)
+y_pred_argmax=np.argmax(y_pred, axis=3)
+# %%
+n_classes = 10
+IOU_keras = MeanIoU(num_classes=n_classes)  
+IOU_keras.update_state(y_test[:,:,:,0], y_pred_argmax)
+print("Mean IoU =", IOU_keras.result().numpy())
