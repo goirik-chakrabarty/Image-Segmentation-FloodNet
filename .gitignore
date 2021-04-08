@@ -133,3 +133,6 @@ data/
 
 #VScode
 .vscode/
+
+#Saved Models
+saved_models/
