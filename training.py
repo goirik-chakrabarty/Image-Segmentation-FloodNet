@@ -13,13 +13,14 @@ import PSPnet
 # %%
 seed = 42
 np.random.seed = seed
+model_name = 'PSPNet_25img_25epoch_768'
 
 # %%
 wd = os.getcwd()                # working directory
 train_dir = wd+"/data/Train"    # training directory
 n_classes=10                    # number of classes
-height = int(768)
-width = int(768)
+height = int(768/2)
+width = int(768/2)
 img_height = 3000
 img_width = 4000
 
@@ -112,7 +113,6 @@ X_train, X_test, y_train, y_test = train_test_split(train_flooded_imgs, train_fl
 # %%
 # Calling model from PSPNet.py
 optim = Adam()
-
 model = PSPnet.get_model(height,width,optim)
 
 # %%
@@ -131,7 +131,7 @@ history = model.fit(
                 validation_data=(X_test, y_test)
             )
 # %%
-model.save('saved_models/PSPnet_25img_25epoch.hdf5')
+model.save('saved_models/'+model_name+'.hdf5')
 
 # %%
 
@@ -145,12 +145,12 @@ plt.title('Training and validation loss')
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
 plt.legend()
-# plt.savefig('PSPNet_12img_25epoch_loss.png')
-# plt.show()
-fig1 = plt.gcf()
+plt.savefig('img/graphs/'+model_name+'_loss.jpg')
 plt.show()
-plt.draw()
-fig1.savefig('/img/graphs/PSPNet_12img_25epoch_IOU.png')
+# fig1 = plt.gcf()
+# plt.show()
+# plt.draw()
+# fig1.savefig('img/graphs/'+model_name+'_loss.png')
 # %%
 acc = history.history['iou_score']
 val_acc = history.history['val_iou_score']
@@ -162,12 +162,12 @@ plt.title('Training and validation IOU')
 plt.xlabel('Epochs')
 plt.ylabel('IOU')
 plt.legend()
-# plt.savefig('/img/graphs/PSPNet_12img_25epoch_IOU.png')
-# plt.show()
-fig2 = plt.gcf()
+plt.savefig('img/graphs/'+model_name+'_IOU.jpg')
 plt.show()
-plt.draw()
-fig2.savefig('/img/graphs/PSPNet_12img_25epoch_IOU.png')
+# fig2 = plt.gcf()
+# plt.show()
+# plt.draw()
+# fig2.savefig('img/graphs/'+model_name+'_IOU.jpg')
 
 # %%
 #############################################
@@ -178,7 +178,7 @@ fig2.savefig('/img/graphs/PSPNet_12img_25epoch_IOU.png')
 from keras.models import load_model
 from keras.metrics import MeanIoU
 # %%
-PSPNet = load_model('saved_models/PSPnet_25epochs.hdf5', compile=False)
+PSPNet = load_model('saved_models/'+model_name+'.hdf5', compile=False)
 # %%
 y_pred=PSPNet.predict(X_test)
 y_pred_argmax=np.argmax(y_pred, axis=3)
