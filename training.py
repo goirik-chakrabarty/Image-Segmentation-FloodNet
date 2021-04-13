@@ -116,7 +116,7 @@ seed = 42
 np.random.seed = seed
 num_imgs = 12
 epochs = 25
-train_grid_size = 384       # 384 or 768
+train_grid_size = 768       # 384 or 768
 model_name = 'PSPNet_'+str(num_imgs)+'img_'+str(epochs)+'epoch_'+str(train_grid_size)+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")         
 
 # General Prepocessing specifications
@@ -142,7 +142,7 @@ tens_dir = wd+"/logs/tensorboard/"
 csv_logfile = wd+"/logs/csvlogs/"+model_name+".csv"
 model_path = wd+"/saved_models/"+model_name+"_{epoch:02d}-{val_iou_score:.2f}.hdf5"
 callbacks = [
-    keras.callbacks.TensorBoard(log_dir=tens_dir, histogram_freq=1),
+    keras.callbacks.TensorBoard(log_dir=tens_dir+model_name, histogram_freq=1),
     keras.callbacks.EarlyStopping(patience=3,monitor="val_iou_score", verbose=1),
     keras.callbacks.CSVLogger(csv_logfile),
     keras.callbacks.ModelCheckpoint(model_path, monitor="val_iou_score", verbose=1, save_best_only=True, mode='max')
