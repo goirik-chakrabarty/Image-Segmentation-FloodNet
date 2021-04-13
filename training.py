@@ -1,14 +1,17 @@
 # %%
 import os
+import datetime
 import numpy as np
 import matplotlib.pyplot as plt 
 import cv2
 
+import tensorflow as tf
+import keras
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from keras.utils import to_categorical
 
-# from keras.optimizers import Adam
+
 import PSPnet
 # %%
 def general_preprocessing(train_dir, n_classes, height, width, img_height, img_width, h_n, w_n, seed, num_imgs):    
@@ -91,7 +94,7 @@ def general_preprocessing(train_dir, n_classes, height, width, img_height, img_w
     X_train, X_test, y_train, y_test = train_test_split(train_flooded_imgs, train_flooded_masks_cat, test_size=0.2, random_state=seed)
 
     return X_train, X_test, y_train, y_test
-# %%
+
 def model_preprocessing(X_train, X_test):
     preprocessor = PSPnet.preprocessing('resnet101')
 
@@ -100,21 +103,23 @@ def model_preprocessing(X_train, X_test):
 
     return X_train, X_test
 
-# %%
 def new_model(height=384, width=384):
     model = PSPnet.get_model(height,width)
 
     return model
 
 # %%
+# Global Variables
+
+# Model specifications
 seed = 42
 np.random.seed = seed
-num_imgs = 12
+num_imgs = 20
 epochs = 25
 train_grid_size = 384       # 384 or 768
-model_name = 'PSPNet_'+str(num_imgs)+'img_'+str(epochs)+'epoch_'+str(train_grid_size)         
+model_name = 'PSPNet_'+str(num_imgs)+'img_'+str(epochs)+'epoch_'+str(train_grid_size)+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")         
 
-# %%
+# General Prepocessing specifications
 wd = os.getcwd()                # working directory
 train_dir = wd+"/data/Train"    # training directory
 n_classes=10                    # number of classes
@@ -125,7 +130,6 @@ img_width = 4000
 
 h_n = int(img_height/height)
 w_n = int(img_width/width)
-
 # %%
 X_train, X_test, y_train, y_test = general_preprocessing(train_dir, n_classes, height, width, img_height, img_width, h_n, w_n, seed, num_imgs)
 X_train, X_test = model_preprocessing(X_train, X_test)
@@ -134,15 +138,26 @@ model = new_model(height, width)
 
 # %%
 # Training the model
+tens_dir = wd+"/logs/tensorboard/"
+csv_logfile = wd+"/logs/csvlogs/"+model_name+".csv"
+model_path = wd+"/saved_models/"+model_name+"_{epoch:02d}-{val_iou_score:.2f}.hdf5"
+callbacks = [
+    keras.callbacks.TensorBoard(log_dir=tens_dir, histogram_freq=1),
+    keras.callbacks.EarlyStopping(patience=3,monitor="val_iou_score", verbose=1),
+    keras.callbacks.CSVLogger(csv_logfile),
+    keras.callbacks.ModelCheckpoint(model_path, monitor="val_iou_score", verbose=1, save_best_only=True, mode='max')
+    ]
+
 history = model.fit(
                 X_train,
                 y_train,
                 epochs=epochs,
                 verbose=1,
-                validation_data=(X_test, y_test)
+                validation_data=(X_test, y_test),
+                callbacks=callbacks,
             )
 # %%
-model.save('saved_models/'+model_name+'.hdf5')
+model.save('saved_models/'+model_name+'final.hdf5')
 
 # %%
 
