@@ -110,8 +110,9 @@ def new_model(height=384, width=384):
 
     return model
 # %%
-def poly_lr(epoch):
-    lrate = learning_rate*((1 - epoch/epochs)**power)
+# def poly_lr(epoch):
+#     lrate = learning_rate*((1 - epoch/epochs)**power)
+#     return lrate
 # %%
 # Global Variables
 
