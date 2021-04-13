@@ -92,6 +92,8 @@ def general_preprocessing(train_dir, n_classes, height, width, img_height, img_w
 
     # Test-Train split for training
     X_train, X_test, y_train, y_test = train_test_split(train_flooded_imgs, train_flooded_masks_cat, test_size=0.2, random_state=seed)
+    X_train = X_train/255
+    X_test = X_test/255
 
     return X_train, X_test, y_train, y_test
 
@@ -132,6 +134,7 @@ h_n = int(img_height/height)
 w_n = int(img_width/width)
 # %%
 X_train, X_test, y_train, y_test = general_preprocessing(train_dir, n_classes, height, width, img_height, img_width, h_n, w_n, seed, num_imgs)
+# %%
 X_train, X_test = model_preprocessing(X_train, X_test)
 # %%
 model = new_model(height, width)
