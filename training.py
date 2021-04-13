@@ -27,89 +27,89 @@ img_width = 4000
 h_n = int(img_height/height)
 w_n = int(img_width/width)
 
+    # %%
+def preprocessing(train_dir, n_classes, height, width, img_height, img_width, h_n, w_n, seed, num_imgs):    
+    train_flooded_imgs=[]
+    train_flooded_img_dir = train_dir+"/Labeled/Flooded/image"
+    imgs = os.listdir(train_flooded_img_dir)
+    imgs.sort()
+    imgs = imgs[:num_imgs]             # To be removed, truncating the number of images loaded for tesing purposes
+
+    # for loading all training images in a numpy array
+    for img_path in imgs:
+        img = cv2.imread("/".join((train_flooded_img_dir,img_path)),1)
+        img = img[0:img_height, 0:img_width, :]
+
+        i = 0
+        j = 0
+        y = 0
+
+        for i in range(h_n):
+            x=0
+            for j in range(w_n):
+                train_flooded_imgs.append(img[y:(y+height), x:(x+width), :])
+                x+=width
+            y+=height
+
+        # train_flooded_imgs.append(img)
+
+    train_flooded_imgs = np.array(train_flooded_imgs)
+
+    train_flooded_masks = []
+    train_flooded_mask_dir = train_dir+"/Labeled/Flooded/mask"
+    masks = os.listdir(train_flooded_mask_dir)
+    masks.sort()
+    masks = masks[:num_imgs]           # To be removed, truncating the number of masks loaded for tesing purposes
+
+    # for loading all training masks in a numpy array
+    for mask_path in masks:
+        mask = cv2.imread("/".join((train_flooded_mask_dir,mask_path)),0)
+        mask = mask[0:img_height, 0:img_width]
+
+        i = 0
+        j = 0
+        y = 0
+
+        for i in range(h_n):
+            x=0
+            for j in range(w_n):
+                train_flooded_masks.append(mask[y:(y+height), x:(x+width)])
+                x+=width
+            y+=height
+
+        # train_flooded_masks.append(mask)
+
+    train_flooded_masks = np.array(train_flooded_masks)
+
+    # Re-encoding the masks because the segmentation models library accepts only labels from [0, ... , n]
+    labelencoder = LabelEncoder()
+    n, h, w = train_flooded_masks.shape
+
+    # print(np.unique(train_flooded_masks))
+
+    train_masks_reshaped = train_flooded_masks.reshape(-1,1)
+    train_masks_reshaped_encoded = labelencoder.fit_transform(train_masks_reshaped)
+    train_flooded_masks = train_masks_reshaped_encoded.reshape(n, h, w)
+
+    # print(np.unique(train_flooded_masks))
+
+    del train_masks_reshaped
+    del train_masks_reshaped_encoded
+
+    # Expanding dimensions because libraries expect and RGB channel.
+    train_flooded_masks = np.expand_dims(train_flooded_masks, axis=3)
+
+    # categorical loss function or other deep learning classification loss functions expect the input to be one hot encoded
+    n_classes = len(np.unique(train_flooded_masks))     # this line can be removed when sure about the number of classes
+    flood_masks_cat = to_categorical(train_flooded_masks, num_classes=n_classes, dtype='uint8')
+    train_flooded_masks_cat = flood_masks_cat.reshape((train_flooded_masks.shape[0],train_flooded_masks.shape[1],train_flooded_masks.shape[2],n_classes))
+
+    # Test-Train split for training
+    X_train, X_test, y_train, y_test = train_test_split(train_flooded_imgs, train_flooded_masks_cat, test_size=0.2, random_state=seed)
+
+    return X_train, X_test, y_train, y_test
 # %%
-train_flooded_imgs=[]
-train_flooded_img_dir = train_dir+"/Labeled/Flooded/image"
-imgs = os.listdir(train_flooded_img_dir)
-imgs.sort()
-imgs = imgs[:num_imgs]             # To be removed, truncating the number of images loaded for tesing purposes
-
-# for loading all training images in a numpy array
-for img_path in imgs:
-    img = cv2.imread("/".join((train_flooded_img_dir,img_path)),1)
-    img = img[0:img_height, 0:img_width, :]
-
-    i = 0
-    j = 0
-    y = 0
-
-    for i in range(h_n):
-        x=0
-        for j in range(w_n):
-            train_flooded_imgs.append(img[y:(y+height), x:(x+width), :])
-            x+=width
-        y+=height
-
-    # train_flooded_imgs.append(img)
-
-train_flooded_imgs = np.array(train_flooded_imgs)
-
-# %%
-train_flooded_masks = []
-train_flooded_mask_dir = train_dir+"/Labeled/Flooded/mask"
-masks = os.listdir(train_flooded_mask_dir)
-masks.sort()
-masks = masks[:num_imgs]           # To be removed, truncating the number of masks loaded for tesing purposes
-
-# for loading all training masks in a numpy array
-for mask_path in masks:
-    mask = cv2.imread("/".join((train_flooded_mask_dir,mask_path)),0)
-    mask = mask[0:img_height, 0:img_width]
-
-    i = 0
-    j = 0
-    y = 0
-
-    for i in range(h_n):
-        x=0
-        for j in range(w_n):
-            train_flooded_masks.append(mask[y:(y+height), x:(x+width)])
-            x+=width
-        y+=height
-
-    # train_flooded_masks.append(mask)
-
-train_flooded_masks = np.array(train_flooded_masks)
-
-# %%
-# Re-encoding the masks because the segmentation models library accepts only labels from [0, ... , n]
-labelencoder = LabelEncoder()
-n, h, w = train_flooded_masks.shape
-
-# print(np.unique(train_flooded_masks))
-
-train_masks_reshaped = train_flooded_masks.reshape(-1,1)
-train_masks_reshaped_encoded = labelencoder.fit_transform(train_masks_reshaped)
-train_flooded_masks = train_masks_reshaped_encoded.reshape(n, h, w)
-
-# print(np.unique(train_flooded_masks))
-
-del train_masks_reshaped
-del train_masks_reshaped_encoded
-
-# %%
-# Expanding dimensions because libraries expect and RGB channel.
-train_flooded_masks = np.expand_dims(train_flooded_masks, axis=3)
-# %%
-# categorical loss function or other deep learning classification loss functions expect the input to be one hot encoded
-n_classes = len(np.unique(train_flooded_masks))     # this line can be removed when sure about the number of classes
-flood_masks_cat = to_categorical(train_flooded_masks, num_classes=n_classes, dtype='uint8')
-train_flooded_masks_cat = flood_masks_cat.reshape((train_flooded_masks.shape[0],train_flooded_masks.shape[1],train_flooded_masks.shape[2],n_classes))
-
-# %%
-# Test-Train split for training
-X_train, X_test, y_train, y_test = train_test_split(train_flooded_imgs, train_flooded_masks_cat, test_size=0.2, random_state=42)
-
+X_train, X_test, y_train, y_test = preprocessing(train_dir, n_classes, height, width, img_height, img_width, h_n, w_n, seed, num_imgs)
 # %%
 #########################################################
 ################ TRAINING BEGINS HERE ###################
@@ -184,8 +184,18 @@ plt.show()
 
 from keras.models import load_model
 from keras.metrics import MeanIoU
+
+import tensorflow as tf
+from tensorflow.keras import layers as layer
+import segmentation_models as sm
 # %%
-PSPNet = load_model('saved_models/'+model_name+'.hdf5', compile=False)
+PSPNet = load_model(
+    'saved_models/'+model_name+'.hdf5',
+    custom_objects = {
+        'binary_crossentropy_plus_jaccard_loss': sm.losses.bce_jaccard_loss,
+        'iou_score': sm.metrics.IOUScore(),
+    }
+    )
 # %%
 y_pred=PSPNet.predict(X_test)
 y_pred_argmax=np.argmax(y_pred, axis=3)

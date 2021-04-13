@@ -30,7 +30,7 @@ def get_model(h,w,optimiser):
     )
     model.compile(
         optimiser,
-        loss=sm.losses.bce_jaccard_loss,
+        loss=sm.losses.categorical_focal_jaccard_loss,
         metrics=[sm.metrics.iou_score],
     )
 
@@ -44,4 +44,11 @@ def preprocessing(x):
 
 # %%
 # get_model(384,384,'adam')
-# %%
+# # %%
+# from keras.models import load_model
+# # %%
+# model_name='PSPNet_12img_25epoch_384'
+
+# # %%
+# PSPNet = load_model('saved_models/'+model_name+'.hdf5', compile=True)
+# # %%
