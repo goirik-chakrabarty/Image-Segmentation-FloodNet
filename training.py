@@ -7,28 +7,11 @@ import cv2
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from keras.utils import to_categorical
+
+# from keras.optimizers import Adam
+import PSPnet
 # %%
-seed = 42
-np.random.seed = seed
-num_imgs = 12
-epochs = 25
-train_grid_size = 384       # 384 or 768
-model_name = 'PSPNet_'+str(num_imgs)+'img_'+str(epochs)+'epoch_'+str(train_grid_size)         
-
-# %%
-wd = os.getcwd()                # working directory
-train_dir = wd+"/data/Train"    # training directory
-n_classes=10                    # number of classes
-height = train_grid_size
-width = train_grid_size
-img_height = 3000
-img_width = 4000
-
-h_n = int(img_height/height)
-w_n = int(img_width/width)
-
-    # %%
-def preprocessing(train_dir, n_classes, height, width, img_height, img_width, h_n, w_n, seed, num_imgs):    
+def general_preprocessing(train_dir, n_classes, height, width, img_height, img_width, h_n, w_n, seed, num_imgs):    
     train_flooded_imgs=[]
     train_flooded_img_dir = train_dir+"/Labeled/Flooded/image"
     imgs = os.listdir(train_flooded_img_dir)
@@ -109,24 +92,45 @@ def preprocessing(train_dir, n_classes, height, width, img_height, img_width, h_
 
     return X_train, X_test, y_train, y_test
 # %%
-X_train, X_test, y_train, y_test = preprocessing(train_dir, n_classes, height, width, img_height, img_width, h_n, w_n, seed, num_imgs)
-# %%
-#########################################################
-################ TRAINING BEGINS HERE ###################
-#########################################################
+def model_preprocessing(X_train, X_test):
+    preprocessor = PSPnet.preprocessing('resnet101')
 
-from keras.optimizers import Adam
-import PSPnet
-# %%
-# Calling model from PSPNet.py
-optim = Adam()
-model = PSPnet.get_model(height,width,optim)
+    X_train = preprocessor(X_train)
+    X_test = preprocessor(X_test)
+
+    return X_train, X_test
 
 # %%
-preprocessor = PSPnet.preprocessing('resnet101')
+def new_model(height=384, width=384):
+    model = PSPnet.get_model(height,width)
 
-X_train = preprocessor(X_train)
-X_test = preprocessor(X_test)
+    return model
+
+# %%
+seed = 42
+np.random.seed = seed
+num_imgs = 12
+epochs = 25
+train_grid_size = 384       # 384 or 768
+model_name = 'PSPNet_'+str(num_imgs)+'img_'+str(epochs)+'epoch_'+str(train_grid_size)         
+
+# %%
+wd = os.getcwd()                # working directory
+train_dir = wd+"/data/Train"    # training directory
+n_classes=10                    # number of classes
+height = train_grid_size
+width = train_grid_size
+img_height = 3000
+img_width = 4000
+
+h_n = int(img_height/height)
+w_n = int(img_width/width)
+
+# %%
+X_train, X_test, y_train, y_test = general_preprocessing(train_dir, n_classes, height, width, img_height, img_width, h_n, w_n, seed, num_imgs)
+X_train, X_test = model_preprocessing(X_train, X_test)
+# %%
+model = new_model(height, width)
 
 # %%
 # Training the model

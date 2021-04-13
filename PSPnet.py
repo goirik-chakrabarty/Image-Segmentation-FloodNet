@@ -7,11 +7,12 @@ import os
 import tensorflow as tf
 from tensorflow.keras import layers as layer
 import segmentation_models as sm
+from keras.optimizers import Adam
 # %%
 # Model creation using segmentation_model
 # %%
 # Define model
-def get_model(h,w,optimiser):
+def get_model(h,w):
     '''
     This is a PSPNet model with the following specifications:-
     backbone = resnet101
@@ -22,7 +23,7 @@ def get_model(h,w,optimiser):
     metric = mIoU
     encoder_weights = imagenet
     '''
-
+    optimiser=Adam()
     model = sm.PSPNet(backbone_name='resnet101',
         input_shape=(h,w,3),
         classes=10,
