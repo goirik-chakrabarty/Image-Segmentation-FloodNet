@@ -109,7 +109,9 @@ def new_model(height=384, width=384):
     model = PSPnet.get_model(height,width)
 
     return model
-
+# %%
+def poly_lr(epoch):
+    lrate = learning_rate*((1 - epoch/epochs)**power)
 # %%
 # Global Variables
 
@@ -118,6 +120,8 @@ seed = 42
 np.random.seed = seed
 num_imgs = 12
 epochs = 25
+power = 0.9
+learning_rate = 0.0001
 train_grid_size = 384       # 384 or 768
 model_name = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")+'PSPNet_'+str(num_imgs)+'img_'+str(epochs)+'epoch_'+str(train_grid_size)         
 
