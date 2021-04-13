@@ -114,7 +114,7 @@ def new_model(height=384, width=384):
 # Model specifications
 seed = 42
 np.random.seed = seed
-num_imgs = 20
+num_imgs = 12
 epochs = 25
 train_grid_size = 384       # 384 or 768
 model_name = 'PSPNet_'+str(num_imgs)+'img_'+str(epochs)+'epoch_'+str(train_grid_size)+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")         
