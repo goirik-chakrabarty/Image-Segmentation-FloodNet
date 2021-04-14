@@ -12,7 +12,7 @@ from keras.optimizers import Adam
 # Model creation using segmentation_model
 # %%
 # Define model
-def get_model(h,w):
+def get_model(h=384,w=384,optim=Adam(),dropout=0):
     '''
     This is a PSPNet model with the following specifications:-
     backbone = resnet101
@@ -27,10 +27,11 @@ def get_model(h,w):
     model = sm.PSPNet(backbone_name='resnet101',
         input_shape=(h,w,3),
         classes=10,
-        activation='softmax'
+        activation='softmax',
+        psp_dropout=dropout
     )
     model.compile(
-        optimiser,
+        optimizer=optim,
         loss=sm.losses.categorical_focal_jaccard_loss,
         metrics=[sm.metrics.iou_score],
     )
@@ -44,7 +45,7 @@ def preprocessing(x):
     return sm.get_preprocessing(x)
 
 # %%
-# get_model(384,384,'adam')
+# get_model(384,384)
 # # %%
 # from keras.models import load_model
 # # %%
@@ -53,3 +54,5 @@ def preprocessing(x):
 # # %%
 # PSPNet = load_model('saved_models/'+model_name+'.hdf5', compile=True)
 # # %%
+
+# %%

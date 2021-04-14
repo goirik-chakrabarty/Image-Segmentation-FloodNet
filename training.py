@@ -10,7 +10,7 @@ import keras
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from keras.utils import to_categorical
-
+from keras.optimizers import SGD, Adam
 
 import PSPnet
 # %%
@@ -105,28 +105,26 @@ def model_preprocessing(X_train, X_test):
 
     return X_train, X_test
 
-def new_model(height=384, width=384):
-    model = PSPnet.get_model(height,width)
-
-    return model
-# %%
-# def poly_lr(epoch):
-#     lrate = learning_rate*((1 - epoch/epochs)**power)
-#     return lrate
+def poly_lr(epoch, learning_rate=0.0001, power=0.9):
+    lrate = learning_rate*((1 - epoch/epochs)**power)
+    return lrate
 # %%
 # Global Variables
 
 # Model specifications
-seed = 42
-np.random.seed = seed
-num_imgs = 12
+num_imgs = 20
 epochs = 25
 power = 0.9
 learning_rate = 0.0001
+momentum = 0.9
+dropout = 0.2
 train_grid_size = 384       # 384 or 768
-model_name = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")+'PSPNet_'+str(num_imgs)+'img_'+str(epochs)+'epoch_'+str(train_grid_size)         
+dt = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+model_name = dt +'PSPNet'
 
 # General Prepocessing specifications
+seed = 42
+np.random.seed = seed
 wd = os.getcwd()                # working directory
 train_dir = wd+"/data/Train"    # training directory
 n_classes=10                    # number of classes
@@ -142,19 +140,43 @@ X_train, X_test, y_train, y_test = general_preprocessing(train_dir, n_classes, h
 # %%
 X_train, X_test = model_preprocessing(X_train, X_test)
 # %%
-model = new_model(height, width)
-
+# optimiser = SGD(learning_rate=learning_rate, momentum=momentum)
+optimiser = Adam(learning_rate=learning_rate)
+model = PSPnet.get_model(height,width,optimiser,dropout)
 # %%
 # Training the model
 tens_dir = wd+"/logs/tensorboard/"
 csv_logfile = wd+"/logs/csvlogs/"+model_name+".csv"
-model_path = wd+"/saved_models/"+model_name+"_{epoch:02d}-{val_iou_score:.2f}.hdf5"
+model_path = wd+"/saved_models/"+model_name+"epoch{epoch:02d}-{val_iou_score:.2f}.hdf5"
+
+lr_rate = keras.callbacks.LearningRateScheduler(poly_lr)
+
+
 callbacks = [
     keras.callbacks.TensorBoard(log_dir=tens_dir+model_name, histogram_freq=1),
     # keras.callbacks.EarlyStopping(patience=3,monitor="val_iou_score", verbose=1),
     keras.callbacks.CSVLogger(csv_logfile),
-    keras.callbacks.ModelCheckpoint(model_path, monitor="val_iou_score", verbose=1, save_best_only=True, mode='max')
+    keras.callbacks.ModelCheckpoint(model_path, monitor="val_iou_score", verbose=1, save_best_only=True, mode='max'),
+    # lr_rate,
     ]
+# %%
+filename = open('model_logs.csv', 'a')
+properties = [
+    dt,
+    model_name,
+    seed,
+    train_grid_size,
+    num_imgs,
+    epochs,
+    str(optimiser),
+    learning_rate,
+    momentum,
+    power,
+    dropout,
+    ]
+new_line = ','.join(str(p) for p in properties)
+filename.write("\n"+new_line+",")
+filename.close()
 
 history = model.fit(
                 X_train,
@@ -165,10 +187,6 @@ history = model.fit(
                 callbacks=callbacks,
             )
 # %%
-# model.save('saved_models/'+model_name+'final.hdf5')
-
-# %%
-
 #Plotting the training and validation accuracy and loss at each epoch
 loss = history.history['loss']
 val_loss = history.history['val_loss']
