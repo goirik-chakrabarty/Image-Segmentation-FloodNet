@@ -123,7 +123,7 @@ dt = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 model_name = dt +'PSPNet'
 
 # General Prepocessing specifications
-seed = 42
+seed = 5
 np.random.seed = seed
 wd = os.getcwd()                # working directory
 train_dir = wd+"/data/Train"    # training directory
