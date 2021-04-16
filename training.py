@@ -70,15 +70,11 @@ def general_preprocessing(train_dir, n_classes, height, width, img_height, img_w
     # Re-encoding the masks because the segmentation models library accepts only labels from [0, ... , n]
     labelencoder = LabelEncoder()
     n, h, w = train_flooded_masks.shape
-
-    # print(np.unique(train_flooded_masks))
-
     train_masks_reshaped = train_flooded_masks.reshape(-1,1)
     train_masks_reshaped_encoded = labelencoder.fit_transform(train_masks_reshaped)
     train_flooded_masks = train_masks_reshaped_encoded.reshape(n, h, w)
 
-    # print(np.unique(train_flooded_masks))
-
+    # Cleaning up memory
     del train_masks_reshaped
     del train_masks_reshaped_encoded
 
