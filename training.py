@@ -3,6 +3,7 @@ import os
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt 
+from random import randint
 import cv2
 
 import tensorflow as tf
@@ -67,6 +68,11 @@ def general_preprocessing(train_dir, n_classes, height, width, img_height, img_w
 
     train_flooded_masks = np.array(train_flooded_masks)
 
+    # Sanity Check
+    rn = randint(0,num_imgs-1)
+    plt.imshow(train_flooded_imgs[rn])
+    plt.imshow(train_flooded_masks[rn])
+
     # Re-encoding the masks because the segmentation models library accepts only labels from [0, ... , n]
     labelencoder = LabelEncoder()
     n, h, w = train_flooded_masks.shape
@@ -114,7 +120,7 @@ power = 0.9
 learning_rate = 0.0001
 momentum = 0.9
 dropout = 0.2
-train_grid_size = 384       # 384 or 768
+train_grid_size = 768       # 384 or 768
 dt = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 model_name = dt +'PSPNet'
 
@@ -133,6 +139,9 @@ h_n = int(img_height/height)
 w_n = int(img_width/width)
 # %%
 X_train, X_test, y_train, y_test = general_preprocessing(train_dir, n_classes, height, width, img_height, img_width, h_n, w_n, seed, num_imgs)
+
+# %%
+plt.imshow(y_test[randint(0,X_test.shape[0])])
 # %%
 X_train, X_test = model_preprocessing(X_train, X_test)
 # %%
