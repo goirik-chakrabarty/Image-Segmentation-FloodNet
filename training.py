@@ -192,40 +192,6 @@ history = model.fit(
                 validation_data=(X_test, y_test),
                 callbacks=callbacks,
             )
-# %%
-#Plotting the training and validation accuracy and loss at each epoch
-loss = history.history['loss']
-val_loss = history.history['val_loss']
-epochs = range(1, len(loss) + 1)
-plt.plot(epochs, loss, 'b', label='Training loss')
-plt.plot(epochs, val_loss, 'r', label='Validation loss')
-plt.title('Training and validation loss')
-plt.xlabel('Epochs')
-plt.ylabel('Loss')
-plt.legend()
-plt.savefig('img/graphs/'+model_name+'_loss.jpg')
-plt.show()
-# fig1 = plt.gcf()
-# plt.show()
-# plt.draw()
-# fig1.savefig('img/graphs/'+model_name+'_loss.png')
-# %%
-acc = history.history['iou_score']
-val_acc = history.history['val_iou_score']
-
-# %%
-plt.plot(epochs, acc, 'b', label='Training IOU')
-plt.plot(epochs, val_acc, 'r', label='Validation IOU')
-plt.title('Training and validation IOU')
-plt.xlabel('Epochs')
-plt.ylabel('IOU')
-plt.legend()
-plt.savefig('img/graphs/'+model_name+'_IOU.jpg')
-plt.show()
-# fig2 = plt.gcf()
-# plt.show()
-# plt.draw()
-# fig2.savefig('img/graphs/'+model_name+'_IOU.jpg')
 
 # %%
 #######################################################
