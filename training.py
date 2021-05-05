@@ -15,7 +15,7 @@ from keras.optimizers import SGD, Adam
 
 import PSPnet
 # %%
-def general_preprocessing(train_dir, n_classes, height, width, img_height, img_width, h_n, w_n, seed, num_imgs):    
+def general_preprocessing(train_dir, n_classes, height, width, img_height, img_width, h_n, w_n, seed, num_imgs, resize_dim):    
     train_flooded_imgs=[]
     train_flooded_img_dir = train_dir+"/Labeled/Flooded/image"
     imgs = os.listdir(train_flooded_img_dir)
@@ -26,6 +26,7 @@ def general_preprocessing(train_dir, n_classes, height, width, img_height, img_w
     for img_path in imgs:
         img = cv2.imread("/".join((train_flooded_img_dir,img_path)),1)
         img = img[0:img_height, 0:img_width, :]
+        img = cv2.resize(img, resize_dim)
 
         i = 0
         j = 0
@@ -34,11 +35,10 @@ def general_preprocessing(train_dir, n_classes, height, width, img_height, img_w
         for i in range(h_n):
             x=0
             for j in range(w_n):
-                train_flooded_imgs.append(img[y:(y+height), x:(x+width), :])
+                img_crop = img[y:(y+height), x:(x+width), :]
+                train_flooded_imgs.append(img_crop)
                 x+=width
             y+=height
-
-        # train_flooded_imgs.append(img)
 
     train_flooded_imgs = np.array(train_flooded_imgs)
 
@@ -52,6 +52,7 @@ def general_preprocessing(train_dir, n_classes, height, width, img_height, img_w
     for mask_path in masks:
         mask = cv2.imread("/".join((train_flooded_mask_dir,mask_path)),0)
         mask = mask[0:img_height, 0:img_width]
+        mask = cv2.resize(mask, resize_dim)
 
         i = 0
         j = 0
@@ -60,18 +61,19 @@ def general_preprocessing(train_dir, n_classes, height, width, img_height, img_w
         for i in range(h_n):
             x=0
             for j in range(w_n):
-                train_flooded_masks.append(mask[y:(y+height), x:(x+width)])
+                mask_crop = mask[y:(y+height), x:(x+width)]
+                train_flooded_masks.append(mask_crop)
                 x+=width
             y+=height
-
-        # train_flooded_masks.append(mask)
 
     train_flooded_masks = np.array(train_flooded_masks)
 
     # Sanity Check
-    rn = randint(0,num_imgs-1)
-    plt.imshow(train_flooded_imgs[rn])
-    plt.imshow(train_flooded_masks[rn])
+    rn = randint(0,(num_imgs*h_n*w_n)-1)
+    img_san = train_flooded_imgs[rn]
+    mask_san = train_flooded_masks[rn]
+    plt.imshow(img_san)
+    print(rn, img_san.shape)
 
     # Re-encoding the masks because the segmentation models library accepts only labels from [0, ... , n]
     labelencoder = LabelEncoder()
@@ -121,6 +123,7 @@ learning_rate = 0.0001
 momentum = 0.9
 dropout = 0.2
 train_grid_size = 768       # 384 or 768
+resize_dim = (2*train_grid_size, 2*train_grid_size)
 dt = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 model_name = dt +'PSPNet'
 
@@ -135,13 +138,11 @@ width = train_grid_size
 img_height = 3000
 img_width = 4000
 
-h_n = int(img_height/height)
-w_n = int(img_width/width)
+h_n = int(resize_dim[0]/height)
+w_n = int(resize_dim[0]/width)
 # %%
-X_train, X_test, y_train, y_test = general_preprocessing(train_dir, n_classes, height, width, img_height, img_width, h_n, w_n, seed, num_imgs)
+X_train, X_test, y_train, y_test = general_preprocessing(train_dir, n_classes, height, width, img_height, img_width, h_n, w_n, seed, num_imgs,resize_dim)
 
-# %%
-plt.imshow(y_test[randint(0,X_test.shape[0])])
 # %%
 X_train, X_test = model_preprocessing(X_train, X_test)
 # %%
