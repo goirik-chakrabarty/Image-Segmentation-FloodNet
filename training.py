@@ -116,7 +116,7 @@ def poly_lr(epoch, learning_rate=0.0001, power=0.9):
 # Global Variables
 
 # Model specifications
-num_imgs = 20
+num_imgs = 40
 epochs = 25
 power = 0.9
 learning_rate = 0.0001
